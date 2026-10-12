@@ -22,7 +22,7 @@ public class UsuarioDetailsService implements UserDetailsService {
                 .map(usuario -> User.builder()
                         .username(usuario.getUsername())
                         .password(usuario.getPassword())
-                        .roles("USER") // Adicione roles conforme necessário
+                        .roles(usuario.getRole()) // Lê o perfil (ADMIN, GERENTE, ATENDENTE) do banco de dados
                         .build())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
     }

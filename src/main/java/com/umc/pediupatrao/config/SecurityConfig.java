@@ -19,7 +19,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 public class SecurityConfig {
 
     private final UsuarioDetailsService usuarioDetailsService;
-
     public SecurityConfig(UsuarioDetailsService usuarioDetailsService) {
         this.usuarioDetailsService = usuarioDetailsService;
     }
@@ -28,7 +27,6 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -36,19 +34,24 @@ public class SecurityConfig {
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Desativa CSRF para REST APIs
+                // CSRF ativado por padrão. Removido o csrf.disable() para cumprir o requisito de segurança.
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/css/**", "/dist/**", "/plugins/**", "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/api/usuarios").permitAll()
+                        //Apenas ADMIN pode administrar usuários e alterar perfis
+                        .requestMatchers("/api/usuarios/**", "/usuarios/**").hasRole("ADMIN")
+                        // Apenas GERENTE aplica descontos e cancela pedidos
+                        .requestMatchers("/api/pedidos/*/cancelar", "/api/pedidos/*/desconto").hasRole("GERENTE")
+                        // DMIN e GERENTE podem consultar clientes e auditoria
+                        .requestMatchers("/auditoria/**").hasAnyRole("ADMIN", "GERENTE")
+                        //ATENDENTE, GERENTE e ADMIN possuem acesso total a clientes e pedidos
+                        .requestMatchers("/clientes/**", "/api/clientes/**", "/pedidos/**", "/api/pedidos/**").hasAnyRole("ATENDENTE", "GERENTE", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -61,14 +64,12 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 );
-
         return http.build();
     }
-
     @Bean
     public AuthenticationSuccessHandler authenticationSuccessHandler() {
         return (request, response, authentication) -> {
-            response.sendRedirect("/"); // Redireciona para a página inicial após login bem-sucedido
+            response.sendRedirect("/");
         };
     }
 }
