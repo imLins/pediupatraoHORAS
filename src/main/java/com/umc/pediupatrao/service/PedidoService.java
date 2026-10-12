@@ -77,7 +77,61 @@ public class PedidoService {
         pedido.setStatus(novoStatus);
         return pedidoRepository.save(pedido);
     }
+//DESCONTO
+    public Pedido cancelarPedido(String id, String justificativa) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
 
+        String statusAtual = pedido.getStatus();
+
+        // Valida se o status permite cancelamento
+        if ("SAIU PARA ENTREGA".equals(statusAtual) || "RETIRADO".equals(statusAtual) || "FINALIZADO".equals(statusAtual)) {
+            throw new IllegalArgumentException("Não é possível cancelar um pedido que já saiu para entrega ou foi finalizado.");
+        }
+        if ("CANCELADO".equals(statusAtual)) {
+            throw new IllegalArgumentException("O pedido já está cancelado.");
+        }
+
+        // Valida se a justificativa foi enviada
+        if (justificativa == null || justificativa.trim().isEmpty()) {
+            throw new IllegalArgumentException("A justificativa é obrigatória para o cancelamento.");
+        }
+
+        pedido.setStatus("CANCELADO");
+        pedido.setJustificativaCancelamento(justificativa);
+
+        return pedidoRepository.save(pedido);
+    }
+
+    public Pedido aplicarDesconto(String id, Double percentualDesconto) {
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
+
+        String statusAtual = pedido.getStatus();
+
+        // Valida se o status permite desconto
+        if ("SAIU PARA ENTREGA".equals(statusAtual) || "RETIRADO".equals(statusAtual) || "FINALIZADO".equals(statusAtual) || "CANCELADO".equals(statusAtual)) {
+            throw new IllegalArgumentException("Não é possível aplicar desconto em pedidos já enviados, finalizados ou cancelados.");
+        }
+
+        // Valida a regra de limite de 20%
+        if (percentualDesconto == null || percentualDesconto <= 0 || percentualDesconto > 20.0) {
+            throw new IllegalArgumentException("O desconto deve ser maior que 0% e limitado a no máximo 20%.");
+        }
+
+        // Recalcula o valor bruto (Preço Unitário * Quantidade)
+        double preco = pedido.getPrecoUnitario() != null ? pedido.getPrecoUnitario() : 0.0;
+        int qtd = pedido.getQuantidade() > 0 ? pedido.getQuantidade() : 1;
+        double valorBruto = preco * qtd;
+
+        // Aplica o desconto matematicamente
+        double valorDesconto = valorBruto * (percentualDesconto / 100.0);
+
+        pedido.setDesconto(valorDesconto);
+        pedido.setValorTotal(valorBruto - valorDesconto);
+
+        return pedidoRepository.save(pedido);
+    }
     // Metodo para ir buscar o nome do utilizador que está autenticado no momento
     private String getUsuarioAutenticado() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
