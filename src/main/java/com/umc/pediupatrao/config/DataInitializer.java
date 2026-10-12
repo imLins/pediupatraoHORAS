@@ -35,7 +35,7 @@ public class DataInitializer {
             if(repo.findByUsername("atendemente").isEmpty()){
                 Usuario atendente = new Usuario();
                 atendente.setUsername("atendente");
-                atendente.setPassword(enconder.encode("123123"));
+                atendente.setPassword(encoder.encode("123123"));
                 atendente.setRole("ATENDENTE");
                 repo.save(atendente);
                 System.out.println("Usuário ATENDENTE criado com sucesso.");
