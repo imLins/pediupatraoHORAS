@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Auditoria - PediuPatrão</title>
+    <!-- Adicione aqui o link para o seu CSS padrão (Bootstrap, etc) -->
+</head>
+<body>
+<div class="container">
+    <h1>Registro de Auditoria</h1>
+
+    <table border="1">
+        <thead>
+        <tr>
+            <th>Data/Hora</th>
+            <th>Usuário</th>
+            <th>Perfil</th>
+            <th>Operação</th>
+            <th>Entidade</th>
+            <th>Valores Anteriores</th>
+            <th>Novos Valores</th>
+            <th>Justificativa</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="log : ${auditorias}">
+            <td th:text="${log.dataHora}"></td>
+            <td th:text="${log.usuario}"></td>
+            <td th:text="${log.perfilUsuario}"></td>
+            <td th:text="${log.operacao}"></td>
+            <td th:text="${log.entidadeAfetada}"></td>
+            <td th:text="${log.valoresAnteriores}"></td>
+            <td th:text="${log.valoresNovos}"></td>
+            <td th:text="${log.justificativa}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <br>
+    <a href="/">Voltar SSpara a Home</a>
+</div>
+</body>
+</html>
