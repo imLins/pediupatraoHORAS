@@ -19,6 +19,7 @@ public class DataInitializer {
                 Usuario user = new Usuario();
                 user.setUsername("admin");
                 user.setPassword(encoder.encode("teste123"));
+                user.setRole("ROLE_ADMIN");
                 repo.save(user);
                 System.out.println("Usuário admin criado!");
             }
@@ -26,17 +27,17 @@ public class DataInitializer {
             if (repo.findByUsername("gerente").isEmpty()){
                 Usuario gerente = new Usuario();
                 gerente.setUsername("gerente");
-                gerente.setPassword(("123#@!"));
-                gerente.setRole("GERENTE");
+                gerente.setPassword(encoder.encode("123#@!"));
+                gerente.setRole("ROLE_GERENTE");
                 repo.save(gerente);
                 System.out.println("Usuário GERENTE criado com sucesso.");
             }
             // Criando o ATENDENTE
-            if(repo.findByUsername("atendemente").isEmpty()){
+            if(repo.findByUsername("atendente").isEmpty()){
                 Usuario atendente = new Usuario();
                 atendente.setUsername("atendente");
                 atendente.setPassword(encoder.encode("123123"));
-                atendente.setRole("ATENDENTE");
+                atendente.setRole("ROLE_ATENDENTE");
                 repo.save(atendente);
                 System.out.println("Usuário ATENDENTE criado com sucesso.");
             }

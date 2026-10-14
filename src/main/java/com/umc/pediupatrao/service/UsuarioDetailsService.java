@@ -19,11 +19,21 @@ public class UsuarioDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return usuarioRepository.findByUsername(username)
-                .map(usuario -> User.builder()
-                        .username(usuario.getUsername())
-                        .password(usuario.getPassword())
-                        .roles(usuario.getRole()) // Lê o perfil (ADMIN, GERENTE, ATENDENTE) do banco de dados
-                        .build())
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
+                .map(usuario -> {
+                    // Pega exatamente a string que o DataInitializer salvou (ex: ROLE_ADMIN)
+                    String role = usuario.getRole() != null ? usuario.getRole().toUpperCase().trim() : "ROLE_USER";
+
+                    // Se por acaso faltar o prefixo ROLE_, nós garantimos que ele tenha
+                    if (!role.startsWith("ROLE_")) {
+                        role = "ROLE_" + role;
+                    }
+
+                    return User.builder()
+                            .username(usuario.getUsername())
+                            .password(usuario.getPassword())
+                            .authorities(role) // authorities() usa o nome exato da permissão, sem "mágicas"
+                            .build();
+                })
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
     }
 }
