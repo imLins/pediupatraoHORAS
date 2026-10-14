@@ -5,6 +5,10 @@ import com.umc.pediupatrao.service.PedidoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import com.umc.pediupatrao.entity.Pedido;
+import com.umc.pediupatrao.repository.ClienteRepository;
+import java.security.Principal;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/pedidos")
