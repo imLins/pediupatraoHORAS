@@ -16,22 +16,32 @@ public class PedidoService {
     private PedidoRepository pedidoRepository;
 
     @Autowired
-    private AuditoriaService auditoriaService; // O nosso serviço espião
+    private AuditoriaService auditoriaService; // Servico de Auditoria
 
     public Pedido criarPedido(Pedido pedido) {
         pedido.setDataHoraEntrada(LocalDateTime.now());
         pedido.setResponsavelRegistro(getUsuarioAutenticado());
         pedido.setStatus("RECEBIDO");
 
-        double preco = pedido.getPrecoUnitario() != null ? pedido.getPrecoUnitario() : 0.0;
+        // --- RF02: MATEMÁTICA ---
+        // Descobre o preço base a partir do tipo da pizza vindo do frontend
+        double precoBase = 0.0;
+        if ("Tradicional".equals(pedido.getTipoPizza())) precoBase = 50.0;
+        else if ("Especial".equals(pedido.getTipoPizza())) precoBase = 70.0;
+        else if ("Doce".equals(pedido.getTipoPizza())) precoBase = 60.0;
+
+        // Grava o preço unitário para não dar problema no futuro (como na hora do desconto)
+        pedido.setPrecoUnitario(precoBase);
+
         int qtd = pedido.getQuantidade() > 0 ? pedido.getQuantidade() : 1;
         double desconto = pedido.getDesconto() != null ? pedido.getDesconto() : 0.0;
 
-        pedido.setValorTotal((preco * qtd) - desconto);
+        // Calcula o valor total final
+        pedido.setValorTotal((precoBase * qtd) - desconto);
 
         Pedido salvo = pedidoRepository.save(pedido);
 
-        // Regista a criação na auditoria
+        // Registra a criação na auditoria
         auditoriaService.registrarAuditoria("INCLUSÃO DE PEDIDO", "Pedido", salvo.getId(),
                 "N/A", "Novo pedido Recebido. Total: R$" + salvo.getValorTotal(), "Abertura de pedido");
 
@@ -80,7 +90,7 @@ public class PedidoService {
         pedido.setStatus(novoStatus);
         Pedido salvo = pedidoRepository.save(pedido);
 
-        // Regista a mudança de estado na auditoria
+        // Registra a mudança de estado na auditoria
         auditoriaService.registrarAuditoria("ALTERAÇÃO DE STATUS", "Pedido", salvo.getId(),
                 "Status: " + statusAtual, "Status: " + novoStatus, "Avanço no fluxo");
 
@@ -109,7 +119,7 @@ public class PedidoService {
 
         Pedido salvo = pedidoRepository.save(pedido);
 
-        // Regista o cancelamento na auditoria
+        // Registra o cancelamento na auditoria
         auditoriaService.registrarAuditoria("CANCELAMENTO DE PEDIDO", "Pedido", salvo.getId(),
                 "Status: " + statusAtual, "Status: CANCELADO", justificativa);
 
@@ -143,7 +153,7 @@ public class PedidoService {
 
         Pedido salvo = pedidoRepository.save(pedido);
 
-        // Regista o desconto na auditoria
+        // Registra o desconto na auditoria
         auditoriaService.registrarAuditoria("APLICAÇÃO DE DESCONTO", "Pedido", salvo.getId(),
                 "Valor Total Anterior: R$" + valorAntigo, "Novo Valor Total: R$" + salvo.getValorTotal() + " (Desconto de " + percentualDesconto + "%)", "Benefício ao cliente");
 

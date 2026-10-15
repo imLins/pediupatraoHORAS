@@ -8,10 +8,15 @@
 
 <div th:fragment="content">
 
+    <!-- Cabeçalho com o Título e o Botão de Novo Pedido -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold mb-0">
             <i class="bi bi-bag me-2 text-primary"></i>Pedidos
         </h2>
+        <!-- Botão visível para Atendente, Gerente e Admin -->
+        <a th:href="@{/pedidos/novo}" class="btn btn-primary" sec:authorize="hasAnyAuthority('ROLE_ATENDENTE', 'ROLE_GERENTE', 'ROLE_ADMIN')">
+            <i class="bi bi-plus-circle me-1"></i> Novo Pedido
+        </a>
     </div>
 
     <!-- Mensagens de feedback -->
@@ -66,30 +71,73 @@
                             </span>
                     </td>
 
-                    <!-- Nova célula com os botões restritos -->
+                    <!-- Coluna com os botões e Modais restritos -->
                     <td class="text-end pe-4">
                         <!-- RF04: Apenas GERENTE visualiza este bloco -->
-                        <div sec:authorize="hasRole('GERENTE')" class="d-flex gap-2 justify-content-end">
+                        <div sec:authorize="hasAnyAuthority('ROLE_GERENTE')" class="d-flex gap-2 justify-content-end">
 
-                            <!-- Botão de Desconto (th:action garante proteção CSRF) -->
-                            <form th:action="@{/api/pedidos/desconto}" method="post">
-                                <input type="hidden" name="id" th:value="${pedido.id}" />
-                                <!-- Exemplo enviando 10% de desconto -->
-                                <input type="hidden" name="percentualDesconto" value="10.0" />
-                                <button type="submit" class="btn btn-sm btn-success" title="Aplicar Desconto">
-                                    <i class="bi bi-percent"></i>
-                                </button>
-                            </form>
+                            <!-- Botão que abre o Modal de Desconto -->
+                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" th:data-bs-target="'#modalDesconto' + ${pedido.id}" title="Aplicar Desconto">
+                                <i class="bi bi-percent"></i>
+                            </button>
 
-                            <!-- Botão de Cancelar (th:action garante proteção CSRF) -->
-                            <form th:action="@{/api/pedidos/cancelar}" method="post">
-                                <input type="hidden" name="id" th:value="${pedido.id}" />
-                                <!-- Exemplo de justificativa padrão (idealmente viria de um modal) -->
-                                <input type="hidden" name="justificativa" value="Cancelado pelo Gerente via painel." />
-                                <button type="submit" class="btn btn-sm btn-danger" title="Cancelar Pedido">
-                                    <i class="bi bi-x-circle"></i>
-                                </button>
-                            </form>
+                            <!-- Botão que abre o Modal de Cancelamento -->
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" th:data-bs-target="'#modalCancelar' + ${pedido.id}" title="Cancelar Pedido">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+
+                            <!-- ============================================== -->
+                            <!-- MODAL DE DESCONTO -->
+                            <!-- ============================================== -->
+                            <div class="modal fade" th:id="'modalDesconto' + ${pedido.id}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <!-- Envia para a rota de desconto com o ID dinâmico -->
+                                        <form th:action="@{/api/pedidos/{id}/desconto(id=${pedido.id})}" method="post">
+                                            <div class="modal-header bg-success text-white">
+                                                <h5 class="modal-title">Aplicar Desconto</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body text-start">
+                                                <label class="form-label fw-bold">Percentual de Desconto (%)</label>
+                                                <input type="number" name="percentualDesconto" class="form-control" min="1" max="20" placeholder="Máx 20%" required>
+                                                <small class="text-muted">O valor será recalculado automaticamente no servidor.</small>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                                <button type="submit" class="btn btn-success">Aplicar Desconto</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ============================================== -->
+                            <!-- MODAL DE CANCELAMENTO -->
+                            <!-- ============================================== -->
+                            <div class="modal fade" th:id="'modalCancelar' + ${pedido.id}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <!-- Envia para a rota de cancelamento com o ID dinâmico -->
+                                        <form th:action="@{/api/pedidos/{id}/cancelar(id=${pedido.id})}" method="post">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title">Cancelar Pedido</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body text-start">
+                                                <label class="form-label fw-bold">Justificativa do Cancelamento</label>
+                                                <textarea name="justificativa" class="form-control" rows="3" placeholder="Por que este pedido está sendo cancelado?" required></textarea>
+                                                <small class="text-danger">Atenção: Esta ação é irreversível e será auditada.</small>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                                <button type="submit" class="btn btn-danger">Confirmar Cancelamento</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </td>
                 </tr>
