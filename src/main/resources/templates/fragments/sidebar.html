@@ -6,9 +6,9 @@
 </head>
 <body>
 <div th:fragment="sidebar">
-    <div id="sidebar">
+    <div id="sidebar" class="d-flex flex-column" style="min-height: 100vh;">
         <h4 class="text-center py-3">Pediu Patrão</h4>
-        <ul class="nav flex-column">
+        <ul class="nav flex-column mb-auto">
             <li class="nav-item">
                 <a class="nav-link" th:href="@{/}" aria-current="page">
                     <i class="bi bi-house"></i><span class="d-none d-md-inline">&nbsp;Home</span>
@@ -26,7 +26,7 @@
             </li>
 
             <!-- RF05: Link de Auditoria (Apenas ADMIN e GERENTE) -->
-            <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'GERENTE')">
+            <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_ADMIN', 'ROLE_GERENTE')">
                 <a class="nav-link" th:href="@{/auditoria}">
                     <i class="bi bi-shield-lock"></i><span class="d-none d-md-inline">&nbsp;Auditoria</span>
                 </a>
@@ -35,7 +35,7 @@
             <li class="nav-item">
                 <a class="nav-link" href="#" onclick="toggleSubmenu(event, this)">
                     <i class="bi bi-gear"></i><span class="d-none d-md-inline">&nbsp;Configurações</span>
-                    <span class="float-end">&#9662;</span> <!-- Setinha -->
+                    <span class="float-end">&#9662;</span>
                 </a>
                 <ul class="nav flex-column submenu">
                     <li class="nav-item">
@@ -60,7 +60,7 @@
                     </li>
 
                     <!-- RF01: Link de Usuários (Apenas ADMIN) -->
-                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                    <li class="nav-item" sec:authorize="hasAuthority('ROLE_ADMIN')">
                         <a class="nav-link" th:href="@{/usuarios}">
                             <i class="bi bi-people-fill"></i><span class="d-none d-md-inline">&nbsp;Usuários</span>
                         </a>
@@ -68,6 +68,17 @@
                 </ul>
             </li>
         </ul>
+
+        <!-- Botão de Sair Fixo no Rodapé do Menu -->
+        <hr class="text-white-50 my-2">
+        <div class="px-3 pb-4">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span class="d-none d-md-inline fw-bold">Sair</span>
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 </body>

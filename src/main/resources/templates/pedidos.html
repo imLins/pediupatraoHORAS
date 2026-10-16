@@ -1,155 +1,194 @@
 <!DOCTYPE html>
-<!-- Adicionada a tag sec do Spring Security -->
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Lista de Pedidos</title>
+    <meta charset="UTF-8">
+    <title>Lista de Pedidos - PediuPatrão</title>
+    <!-- Injeção direta do Bootstrap para garantir o visual -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
-<body>
+<body class="bg-light">
 
-<div th:fragment="content">
+<div th:fragment="content" class="container-fluid py-4">
 
     <!-- Cabeçalho com o Título e o Botão de Novo Pedido -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold mb-0">
-            <i class="bi bi-bag me-2 text-primary"></i>Pedidos
+            <i class="bi bi-bag me-2 text-primary"></i>Gestão de Pedidos
         </h2>
-        <!-- Botão visível para Atendente, Gerente e Admin -->
-        <a th:href="@{/pedidos/novo}" class="btn btn-primary" sec:authorize="hasAnyAuthority('ROLE_ATENDENTE', 'ROLE_GERENTE', 'ROLE_ADMIN')">
+        <a th:href="@{/pedidos/novo}" class="btn btn-primary shadow-sm" sec:authorize="hasAnyAuthority('ROLE_ATENDENTE', 'ROLE_GERENTE', 'ROLE_ADMIN')">
             <i class="bi bi-plus-circle me-1"></i> Novo Pedido
         </a>
     </div>
 
     <!-- Mensagens de feedback -->
-    <div class="alert alert-success alert-dismissible fade show" th:if="${sucesso}" role="alert">
+    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" th:if="${sucesso}" role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
         <span th:text="${sucesso}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-    <div class="alert alert-danger alert-dismissible fade show" th:if="${erro}" role="alert">
+    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" th:if="${erro}" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         <span th:text="${erro}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
     <!-- Tabela -->
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0">
         <div class="card-body p-0">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-dark">
-                <tr>
-                    <th class="ps-4">ID</th>
-                    <th>Cliente ID</th>
-                    <th>Tipo de Pizza</th>
-                    <th>Sabor</th>
-                    <th>Quantidade</th>
-                    <th>Status</th>
-                    <!-- Nova coluna de ações -->
-                    <th class="text-end pe-4">Ações</th>
-                </tr>
-                </thead>
-                <tbody>
-                <!-- Lista vazia -->
-                <tr th:if="${#lists.isEmpty(pedidos)}">
-                    <td colspan="7" class="text-center text-muted py-5">
-                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                        Nenhum pedido encontrado.
-                    </td>
-                </tr>
-                <!-- Linhas -->
-                <tr th:each="pedido : ${pedidos}">
-                    <td class="ps-4 text-muted" th:text="${pedido.id}"></td>
-                    <td th:text="${pedido.clienteId}"></td>
-                    <td th:text="${pedido.tipoPizza}"></td>
-                    <td th:text="${pedido.sabor}"></td>
-                    <td th:text="${pedido.quantidade}"></td>
-                    <td>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Cliente</th>
+                        <th>Detalhes (Tipo/Sabor)</th>
+                        <th>Qtd</th>
+                        <th>Valor Total</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Lista vazia -->
+                    <tr th:if="${#lists.isEmpty(pedidos)}">
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                            Nenhum pedido encontrado.
+                        </td>
+                    </tr>
+                    <!-- Linhas -->
+                    <tr th:each="pedido : ${pedidos}">
+                        <td class="ps-4 text-muted fw-bold" th:text="${'#' + pedido.id}"></td>
+                        <td th:text="${pedido.clienteId}"></td>
+                        <td>
+                            <span th:text="${pedido.tipoPizza}"></span> - <span class="text-muted" th:text="${pedido.sabor}"></span>
+                        </td>
+                        <td th:text="${pedido.quantidade}"></td>
+
+                        <!-- Coluna do Valor Total (Importante para ver o Desconto) -->
+                        <td class="fw-bold text-success" th:text="${pedido.valorTotal != null ? 'R$ ' + pedido.valorTotal : 'R$ 0.00'}"></td>
+
+                        <!-- Badges de Status -->
+                        <td>
                             <span class="badge"
-                                  th:classappend="${pedido.status == 'ENTREGUE'} ? 'bg-success' :
+                                  th:classappend="${pedido.status == 'FINALIZADO' or pedido.status == 'ENTREGUE'} ? 'bg-success' :
                                                   (${pedido.status == 'CANCELADO'} ? 'bg-danger' :
-                                                  (${pedido.status == 'EM_PREPARO'} ? 'bg-warning text-dark' : 'bg-secondary'))"
+                                                  (${pedido.status == 'EM PREPARAÇÃO' or pedido.status == 'EM_PREPARO'} ? 'bg-warning text-dark' :
+                                                  (${pedido.status == 'PRONTO'} ? 'bg-info text-dark' : 'bg-secondary')))"
                                   th:text="${pedido.status}">
                             </span>
-                    </td>
+                        </td>
 
-                    <!-- Coluna com os botões e Modais restritos -->
-                    <td class="text-end pe-4">
-                        <!-- RF04: Apenas GERENTE visualiza este bloco -->
-                        <div sec:authorize="hasAnyAuthority('ROLE_GERENTE')" class="d-flex gap-2 justify-content-end">
+                        <!-- Coluna com os botões Dinâmicos -->
+                        <td class="text-end pe-4">
+                            <div class="d-flex gap-2 justify-content-end align-items-center">
 
-                            <!-- Botão que abre o Modal de Desconto -->
-                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" th:data-bs-target="'#modalDesconto' + ${pedido.id}" title="Aplicar Desconto">
-                                <i class="bi bi-percent"></i>
-                            </button>
+                                <!-- ============================================================== -->
+                                <!-- 1. BOTÕES DE TRANSIÇÃO (Rota de Status Unificada do Backend)   -->
+                                <!-- ============================================================== -->
 
-                            <!-- Botão que abre o Modal de Cancelamento -->
-                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" th:data-bs-target="'#modalCancelar' + ${pedido.id}" title="Cancelar Pedido">
-                                <i class="bi bi-x-circle"></i>
-                            </button>
+                                <form th:if="${pedido.status == 'RECEBIDO'}" th:action="@{/api/pedidos/{id}/status(id=${pedido.id})}" method="post">
+                                    <input type="hidden" name="novoStatus" value="EM PREPARAÇÃO">
+                                    <button type="submit" class="btn btn-sm btn-outline-warning fw-bold" title="Iniciar Preparo"><i class="bi bi-fire"></i> Preparar</button>
+                                </form>
 
-                            <!-- ============================================== -->
-                            <!-- MODAL DE DESCONTO -->
-                            <!-- ============================================== -->
-                            <div class="modal fade" th:id="'modalDesconto' + ${pedido.id}" tabindex="-1">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <!-- Envia para a rota de desconto com o ID dinâmico -->
-                                        <form th:action="@{/api/pedidos/{id}/desconto(id=${pedido.id})}" method="post">
-                                            <div class="modal-header bg-success text-white">
-                                                <h5 class="modal-title">Aplicar Desconto</h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                <form th:if="${pedido.status == 'EM PREPARAÇÃO' or pedido.status == 'EM_PREPARO'}" th:action="@{/api/pedidos/{id}/status(id=${pedido.id})}" method="post">
+                                    <input type="hidden" name="novoStatus" value="PRONTO">
+                                    <button type="submit" class="btn btn-sm btn-outline-info fw-bold" title="Marcar como Pronto"><i class="bi bi-box-seam"></i> Pronto</button>
+                                </form>
+
+                                <form th:if="${pedido.status == 'PRONTO'}" th:action="@{/api/pedidos/{id}/status(id=${pedido.id})}" method="post">
+                                    <input type="hidden" name="novoStatus" value="SAIU PARA ENTREGA">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary fw-bold" title="Sair para Entrega"><i class="bi bi-bicycle"></i> Entregar</button>
+                                </form>
+
+                                <form th:if="${pedido.status == 'SAIU PARA ENTREGA' or pedido.status == 'SAIU_PARA_ENTREGA'}" th:action="@{/api/pedidos/{id}/status(id=${pedido.id})}" method="post">
+                                    <input type="hidden" name="novoStatus" value="FINALIZADO">
+                                    <button type="submit" class="btn btn-sm btn-success fw-bold" title="Finalizar Pedido"><i class="bi bi-check2-all"></i> Finalizar</button>
+                                </form>
+
+
+                                <!-- ============================================================== -->
+                                <!-- 2. BOTÕES EXCLUSIVOS DO GERENTE (RF04)                         -->
+                                <!-- ============================================================== -->
+                                <div sec:authorize="hasAuthority('ROLE_GERENTE')" class="d-flex gap-2" th:if="${pedido.status != 'CANCELADO' and pedido.status != 'FINALIZADO'}">
+
+                                    <!-- Botão Desconto -->
+                                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" th:data-bs-target="'#modalDesconto' + ${pedido.id}" title="Aplicar Desconto">
+                                        <i class="bi bi-percent"></i>
+                                    </button>
+
+                                    <!-- Botão Cancelar -->
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" th:data-bs-target="'#modalCancelar' + ${pedido.id}" title="Cancelar Pedido">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Modais do Gerente (Ocultos na tela até clicar) -->
+                                <div sec:authorize="hasAuthority('ROLE_GERENTE')">
+                                    <!-- Modal Desconto -->
+                                    <div class="modal fade" th:id="'modalDesconto' + ${pedido.id}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form th:action="@{/api/pedidos/{id}/desconto(id=${pedido.id})}" method="post">
+                                                    <div class="modal-header bg-success text-white">
+                                                        <h5 class="modal-title">Aplicar Desconto</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body text-start">
+                                                        <label class="form-label fw-bold">Percentual de Desconto (%)</label>
+                                                        <input type="number" name="percentualDesconto" class="form-control" min="1" max="20" placeholder="Máximo 20%" required>
+                                                        <small class="text-muted">O valor será recalculado automaticamente no servidor.</small>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                                        <button type="submit" class="btn btn-success">Confirmar</button>
+                                                    </div>
+                                                </form>
                                             </div>
-                                            <div class="modal-body text-start">
-                                                <label class="form-label fw-bold">Percentual de Desconto (%)</label>
-                                                <input type="number" name="percentualDesconto" class="form-control" min="1" max="20" placeholder="Máx 20%" required>
-                                                <small class="text-muted">O valor será recalculado automaticamente no servidor.</small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal Cancelamento -->
+                                    <div class="modal fade" th:id="'modalCancelar' + ${pedido.id}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form th:action="@{/api/pedidos/{id}/cancelar(id=${pedido.id})}" method="post">
+                                                    <div class="modal-header bg-danger text-white">
+                                                        <h5 class="modal-title">Cancelar Pedido</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body text-start">
+                                                        <label class="form-label fw-bold">Justificativa</label>
+                                                        <textarea name="justificativa" class="form-control" rows="3" placeholder="Por que este pedido está sendo cancelado?" required></textarea>
+                                                        <small class="text-danger">Atenção: Ação irreversível. Será auditada.</small>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                                        <button type="submit" class="btn btn-danger">Confirmar Cancelamento</button>
+                                                    </div>
+                                                </form>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                                                <button type="submit" class="btn btn-success">Aplicar Desconto</button>
-                                            </div>
-                                        </form>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                                <!-- Fim Modais do Gerente -->
 
-                            <!-- ============================================== -->
-                            <!-- MODAL DE CANCELAMENTO -->
-                            <!-- ============================================== -->
-                            <div class="modal fade" th:id="'modalCancelar' + ${pedido.id}" tabindex="-1">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <!-- Envia para a rota de cancelamento com o ID dinâmico -->
-                                        <form th:action="@{/api/pedidos/{id}/cancelar(id=${pedido.id})}" method="post">
-                                            <div class="modal-header bg-danger text-white">
-                                                <h5 class="modal-title">Cancelar Pedido</h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body text-start">
-                                                <label class="form-label fw-bold">Justificativa do Cancelamento</label>
-                                                <textarea name="justificativa" class="form-control" rows="3" placeholder="Por que este pedido está sendo cancelado?" required></textarea>
-                                                <small class="text-danger">Atenção: Esta ação é irreversível e será auditada.</small>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                                                <button type="submit" class="btn btn-danger">Confirmar Cancelamento</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
                             </div>
-
-                        </div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="card-footer text-muted small" th:if="${!#lists.isEmpty(pedidos)}">
-            Total: <strong th:text="${#lists.size(pedidos)}"></strong> pedido(s)
+        <div class="card-footer text-muted small py-3" th:if="${!#lists.isEmpty(pedidos)}">
+            Total de Registros: <strong th:text="${#lists.size(pedidos)}"></strong>
         </div>
     </div>
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
